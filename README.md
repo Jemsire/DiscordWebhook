@@ -184,4 +184,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Support
 
-For issues, feature requests, or questions, please open an issue on the GitHub repository.
+For issues, feature requests, or questions, please open an [Issue](https://github.com/jemsire/discordwebhook/issues).
