@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord Support
+    url: https://discord.jemsire.com/
+    about: Get help from the community on our Discord
+  - name: Documentation
+    url: https://github.com/jemsire/DiscordWebhook/blob/main/README.md
+    about: Check the README for documentation

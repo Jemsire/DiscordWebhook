@@ -1,0 +1,18 @@
+{
+  "Group": "Jemsire",
+  "Name": "DiscordWebhook",
+  "Version": "1.0.0",
+  "Description": "Show you in-game chat and events using only a discord webhook!",
+  "Authors": [
+    {
+      "Name": "TinyTank800"
+    }
+  ],
+  "Website": "https://jemsire.com/DiscordWebhook",
+  "ServerVersion": "*",
+  "Dependencies": {},
+  "OptionalDependencies": {},
+  "DisabledByDefault": false,
+  "IncludesAssetPack": false,
+  "Main": "com.jemsire.plugin.DiscordWebhook"
+}
