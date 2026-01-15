@@ -50,6 +50,14 @@ After first launch, a `Jemsire_DiscordWebhook/WebhookConfig.json` file will be c
 }
 ```
 
+## Screenshots
+
+### Configuration File
+![Configuration File](assets/images/ConfigFile.png)
+
+### Discord Messages
+![Discord Messages](assets/images/DiscordExample.png)
+
 ## Commands
 
 - `/dw-reload` - Reloads the plugin configuration without restarting the server
