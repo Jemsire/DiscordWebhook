@@ -38,7 +38,7 @@ public class WebhookConfig {
 
     public boolean reloadConfig() {
         String original = DiscordWebhook.get().getWebhookConfig().get().getWebhookLink();
-        String New = "";
+        String New;
 
         // Access new values
         DiscordWebhook.get().getWebhookConfig().load();

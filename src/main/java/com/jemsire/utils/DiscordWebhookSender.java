@@ -31,7 +31,7 @@ public class DiscordWebhookSender {
 
             connection.getInputStream().close(); // perform send
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.log(e.toString(), Level.SEVERE);
         }
     }
 
@@ -91,7 +91,7 @@ public class DiscordWebhookSender {
 
             connection.getInputStream().close();
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.log(e.toString(), Level.SEVERE);
         }
     }
 
