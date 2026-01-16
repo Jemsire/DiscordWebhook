@@ -6,8 +6,7 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/jemsire/DiscordWebhook)
 ![GitHub license](https://img.shields.io/github/license/jemsire/DiscordWebhook)
 
-A Hytale server plugin that links in-game events to a Discord channel using a webhook. This plugin automatically sends player join, leave, and chat messages to your Discord server.
-
+A Hytale server plugin that links in-game events to a Discord channel using a webhook. This plugin automatically sends player join, leave, deaths, and chat messages to your Discord server.
 ## Current Features
 
 - **Player Join Events**: Sends an embed notification when a player joins the server
