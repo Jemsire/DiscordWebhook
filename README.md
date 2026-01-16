@@ -12,8 +12,10 @@ A Hytale server plugin that links in-game events to a Discord channel using a we
 
 - **Player Join Events**: Sends an embed notification when a player joins the server
 - **Player Leave Events**: Sends an embed notification when a player leaves the server
+- **Player Death Events**: Sends an embed notification when a player dies on the server
 - **Player Chat**: Forwards all player chat messages to Discord
 - **Easy Configuration**: Simple webhook URL configuration
+- **Update check**: Check Github releases for updates and notifies you if there is one
 - **Hot Reload**: Reload configuration without restarting the server using `/dw-reload`
 
 ## Planned Features
@@ -24,7 +26,7 @@ A Hytale server plugin that links in-game events to a Discord channel using a we
 ## Installation
 
 1. Download the latest release from the [releases page](https://github.com/jemsire/DiscordWebhook/releases)
-2. Place the `DiscordWebhook-1.0.0.jar` file into your Hytale server's `mods` folder
+2. Place the `DiscordWebhook-x.x.x.jar` file into your Hytale server's `mods` folder
 3. Start your server to generate the configuration file
 4. Edit the `Jemsire_DiscordWebhook/WebhookConfig.json` file in your mods folder and add your Discord webhook URL
 5. In-game type `/dw-reload` to hot reload the config to start the plugin.
@@ -46,7 +48,8 @@ After first launch, a `Jemsire_DiscordWebhook/WebhookConfig.json` file will be c
 ```json
 {
   "WebhookLink": "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_HERE",
-  "Version": 1
+  "Version": 1,
+  "UpdateCheck": true
 }
 ```
 
@@ -85,13 +88,17 @@ The plugin follows a modular architecture:
    - Listens for `PlayerDisconnectEvent`
    - Sends a red embed with player name and leave message
 
-3. **Player Chat** (`OnPlayerChatEvent.java`):
+3. **Player Death** (`OnPlayerDeathEvent.java`):
+    - Listens for `DeathSystems.OnDeathSystem` events
+    - Sends a gray embed with player name and death message
+
+4. **Player Chat** (`OnPlayerChatEvent.java`):
    - Listens for `PlayerChatEvent`
    - Sends a formatted message with player name and chat content
 
 ### Message Formatting
 
-- **Join/Leave Events**: Sent as Discord embeds with colored borders (green for join, red for leave)
+- **Join/Leave/Death Events**: Sent as Discord embeds with colored borders (green for join, red for leave)
 - **Chat Messages**: Sent as plain text messages with player name and content
 - **JSON Escaping**: All messages are properly escaped to prevent JSON injection
 
@@ -117,7 +124,7 @@ The plugin follows a modular architecture:
    ./gradlew build
    ```
 
-4. The compiled JAR will be in `build/libs/DiscordWebhook-1.0.0.jar`
+4. The compiled JAR will be in `build/libs/DiscordWebhook-x.x.x.jar`
 
 ## Project Structure
 
@@ -131,11 +138,13 @@ DiscordWebhook/
 │   ├── events/
 │   │   ├── OnPlayerChatEvent.java      # Handles player chat messages
 │   │   ├── OnPlayerDisconnectEvent.java # Handles player disconnections
+│   │   ├── OnPlayerDeathEvent.java     # Handles player deaths
 │   │   └── OnPlayerReadyEvent.java     # Handles player joins
 │   ├── plugin/
 │   │   └── DiscordWebhook.java     # Main plugin class
 │   └── utils/
 │       ├── DiscordWebhookSender.java   # Webhook HTTP client
+│       ├── UpdateChecker.java          # Checks for updates
 │       └── Logger.java                 # Logging utility
 ├── src/main/resources/
 │   └── manifest.json                # Plugin metadata
