@@ -10,8 +10,9 @@ import java.util.Objects;
 import java.util.logging.Level;
 
 public class WebhookConfig {
-    private Integer version = 1;
+    private Integer version = 2;
     private String webhookLink = "PUT-WEBHOOK-URL-HERE";
+    private boolean updateCheck = true;
 
     public static final BuilderCodec<WebhookConfig> CODEC =
             BuilderCodec.builder(WebhookConfig.class, WebhookConfig::new)
@@ -21,12 +22,21 @@ public class WebhookConfig {
                             obj -> obj.webhookLink
                     )
                     .add()
+
                     .append(
                             new KeyedCodec<>("Version", Codec.INTEGER),
                             (obj, val) -> obj.version = val,
                             obj -> obj.version
                     )
                     .add()
+
+                    .append(
+                            new KeyedCodec<>("UpdateCheck", Codec.BOOLEAN),
+                            (obj, val) -> obj.updateCheck = val,
+                            obj -> obj.updateCheck
+                    )
+                    .add()
+
                     .build();
 
     public WebhookConfig() {
@@ -34,6 +44,10 @@ public class WebhookConfig {
 
     public String getWebhookLink() {
         return webhookLink;
+    }
+
+    public Boolean getUpdateCheck() {
+        return updateCheck;
     }
 
     public boolean reloadConfig() {
