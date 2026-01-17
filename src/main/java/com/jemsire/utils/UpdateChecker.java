@@ -1,8 +1,5 @@
 package com.jemsire.utils;
 
-import com.jemsire.plugin.DiscordWebhook;
-import com.hypixel.hytale.logger.HytaleLogger;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -16,17 +13,17 @@ public class UpdateChecker {
     private static final String GITHUB_API_URL = "https://api.github.com/repos/Jemsire/DiscordWebhook/releases/latest";
     private static final String GITHUB_RELEASES_URL = "https://github.com/Jemsire/DiscordWebhook/releases";
     
-    private final HytaleLogger logger;
     private final String currentVersion;
     
     public UpdateChecker(String currentVersion) {
-        this.logger = DiscordWebhook.get().getLogger();
         this.currentVersion = currentVersion;
     }
     
     /**
      * Checks for updates asynchronously
+     * @deprecated Use checkForUpdates() from thread pool instead
      */
+    @Deprecated
     public void checkForUpdatesAsync() {
         // Run in a separate thread to avoid blocking startup
         Thread updateThread = new Thread(() -> {
@@ -34,7 +31,7 @@ public class UpdateChecker {
                 checkForUpdates();
             } catch (Exception e) {
                 // Silently fail - update checking shouldn't break the plugin
-                logger.at(Level.FINE).log("Update check failed: " + e.getMessage());
+                Logger.log("Update check failed: " + e.getMessage(), Level.WARNING);
             }
         });
         updateThread.setName("DiscordWebhook-UpdateChecker");
@@ -44,28 +41,29 @@ public class UpdateChecker {
 
     /**
      * Checks for updates synchronously
+     * Can be called from any thread - uses Logger utility for thread-safe logging
      */
     public void checkForUpdates() {
         try {
             String latestVersion = fetchLatestVersion();
             
             if (latestVersion == null) {
-                logger.at(Level.INFO).log("Could not fetch latest version from GitHub");
+                Logger.info("Could not fetch latest version from GitHub");
                 return;
             }
             
             if (isNewerVersion(latestVersion, currentVersion)) {
-                logger.at(Level.INFO).log("═══════════════════════════════════════════════════════════");
-                logger.at(Level.INFO).log("A new version of DiscordWebhook is available!");
-                logger.at(Level.INFO).log("Current version: " + currentVersion);
-                logger.at(Level.INFO).log("Latest version: " + latestVersion);
-                logger.at(Level.INFO).log("Download: " + GITHUB_RELEASES_URL);
-                logger.at(Level.INFO).log("═══════════════════════════════════════════════════════════");
+                Logger.info("═══════════════════════════════════════════════════════════");
+                Logger.info("A new version of DiscordWebhook is available!");
+                Logger.info("Current version: " + currentVersion);
+                Logger.info("Latest version: " + latestVersion);
+                Logger.info("Download: " + GITHUB_RELEASES_URL);
+                Logger.info("═══════════════════════════════════════════════════════════");
             } else {
-                logger.at(Level.INFO).log("DiscordWebhook is up to date! (Version: " + currentVersion + ")");
+                Logger.info("DiscordWebhook is up to date! (Version: " + currentVersion + ")");
             }
         } catch (Exception e) {
-            logger.at(Level.INFO).log("Update check failed: " + e.getMessage());
+            Logger.severe("Update check failed: " + e.getMessage(), e);
         }
     }
     

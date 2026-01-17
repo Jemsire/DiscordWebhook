@@ -13,6 +13,7 @@ import com.jemsire.events.OnPlayerChatEvent;
 import com.jemsire.events.OnPlayerDeathEvent;
 import com.jemsire.events.OnPlayerDisconnectEvent;
 import com.jemsire.events.OnPlayerReadyEvent;
+import com.jemsire.utils.Logger;
 import com.jemsire.utils.UpdateChecker;
 
 import javax.annotation.Nonnull;
@@ -23,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,7 +39,7 @@ public class DiscordWebhook extends JavaPlugin {
 
     public DiscordWebhook(@Nonnull JavaPluginInit init) {
         super(init);
-        getLogger().at(Level.INFO).log("Starting Plugin...");
+        Logger.info("Starting Plugin...");
 
         // Registers the configuration with the filename "WebhookConfig"
         this.config = this.withConfig("WebhookConfig", WebhookConfig.CODEC);
@@ -66,19 +66,19 @@ public class DiscordWebhook extends JavaPlugin {
         // Register events
         registerEvents();
 
-        getLogger().at(Level.INFO).log("Setup Finished.");
+        Logger.info("Setup Finished.");
 
         config.save();
-        getLogger().at(Level.INFO).log("Config Saved.");
+        Logger.info("Config Saved.");
 
         if(config.get().getUpdateCheck()){
-            getLogger().at(Level.INFO).log("Checking for updates...");
+            Logger.info("Checking for updates...");
             // Run update check asynchronously to avoid blocking startup
             threadPool.execute(() -> {
                 try {
                     checkForUpdates();
                 } catch (Exception e) {
-                    getLogger().at(Level.WARNING).log("Update check failed: " + e.getMessage());
+                    Logger.warning("Update check failed: " + e.getMessage());
                 }
             });
         }
@@ -86,17 +86,17 @@ public class DiscordWebhook extends JavaPlugin {
 
     @Override
     protected void shutdown(){
-        getLogger().at(Level.INFO).log("Shutting down...");
+        Logger.info("Shutting down...");
 
         // Shutdown thread pool gracefully
         if (threadPool != null) {
             threadPool.shutdown();
             try {
                 if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
-                    getLogger().at(Level.WARNING).log("Thread pool did not terminate gracefully, forcing shutdown...");
+                    Logger.warning("Thread pool did not terminate gracefully, forcing shutdown...");
                     threadPool.shutdownNow();
                     if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                        getLogger().at(Level.SEVERE).log("Thread pool did not terminate");
+                        Logger.severe("Thread pool did not terminate");
                     }
                 }
             } catch (InterruptedException e) {
@@ -109,9 +109,9 @@ public class DiscordWebhook extends JavaPlugin {
         this.getEventRegistry().shutdown();
 
         config.save();
-        getLogger().at(Level.INFO).log("Config Saved.");
+        Logger.info("Config Saved.");
 
-        getLogger().at(Level.INFO).log("Shutdown Complete");
+        Logger.info("Shutdown Complete");
     }
     
     /**
@@ -123,7 +123,7 @@ public class DiscordWebhook extends JavaPlugin {
 
     private void registerCommands() {
         this.getCommandRegistry().registerCommand(new ReloadCommand("dw-reload", "Reload the config for DiscordWebhook"));
-        getLogger().at(Level.INFO).log("Commands Registered.");
+        Logger.info("Commands Registered.");
     }
 
     private void registerEvents() {
@@ -131,7 +131,7 @@ public class DiscordWebhook extends JavaPlugin {
         this.getEventRegistry().registerGlobal(PlayerChatEvent.class, OnPlayerChatEvent::onPlayerChat);
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, OnPlayerDisconnectEvent::onPlayerDisconnect);
         this.getEntityStoreRegistry().registerSystem(new OnPlayerDeathEvent());
-        getLogger().at(Level.INFO).log("Events Registered.");
+        Logger.info("Events Registered.");
     }
 
     public Config<WebhookConfig> getWebhookConfig() {
@@ -175,7 +175,7 @@ public class DiscordWebhook extends JavaPlugin {
                 return matcher.group(1);
             }
         } catch (Exception e) {
-            getLogger().at(Level.WARNING).log("Failed to read version from manifest: " + e.getMessage());
+            Logger.warning("Failed to read version from manifest: " + e.getMessage());
         }
         
         return "1.0.0"; // fallback version
