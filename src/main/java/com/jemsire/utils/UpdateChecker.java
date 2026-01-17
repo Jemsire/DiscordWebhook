@@ -50,7 +50,7 @@ public class UpdateChecker {
             String latestVersion = fetchLatestVersion();
             
             if (latestVersion == null) {
-                logger.at(Level.FINE).log("Could not fetch latest version from GitHub");
+                logger.at(Level.INFO).log("Could not fetch latest version from GitHub");
                 return;
             }
             
@@ -62,10 +62,10 @@ public class UpdateChecker {
                 logger.at(Level.INFO).log("Download: " + GITHUB_RELEASES_URL);
                 logger.at(Level.INFO).log("═══════════════════════════════════════════════════════════");
             } else {
-                logger.at(Level.FINE).log("DiscordWebhook is up to date! (Version: " + currentVersion + ")");
+                logger.at(Level.INFO).log("DiscordWebhook is up to date! (Version: " + currentVersion + ")");
             }
         } catch (Exception e) {
-            logger.at(Level.FINE).log("Update check failed: " + e.getMessage());
+            logger.at(Level.INFO).log("Update check failed: " + e.getMessage());
         }
     }
     

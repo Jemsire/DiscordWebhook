@@ -11,7 +11,8 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.jemsire.utils.DiscordWebhookSender;
 
 import javax.annotation.Nonnull;
-import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class OnPlayerDeathEvent extends DeathSystems.OnDeathSystem {
     public Query<EntityStore> getQuery() {
@@ -25,12 +26,21 @@ public class OnPlayerDeathEvent extends DeathSystems.OnDeathSystem {
             String playerName = playerComponent.getDisplayName();
             String deathCause = deathComponent.getDeathMessage().getAnsiMessage().replace("You were", "was");
 
-            DiscordWebhookSender.sendEmbed(
-                    "☠ Player Died",
-                    playerName + " " + deathCause,
-                    "",
-                    0xBDBDBD // green
-            );
+            Map<String, String> placeholders = new HashMap<>();
+            placeholders.put("player", playerName);
+            placeholders.put("playerDisplayName", playerName); // Alias for clarity
+            placeholders.put("deathCause", deathCause);
+            placeholders.put("deathMessage", deathCause); // Alias for clarity
+            
+            // Try to get raw death message (without replacement)
+            try {
+                String rawDeathMessage = deathComponent.getDeathMessage().getAnsiMessage();
+                placeholders.put("deathMessageRaw", rawDeathMessage);
+            } catch (Exception e) {
+                // Raw message not available
+            }
+
+            DiscordWebhookSender.sendEventMessage("PlayerDeath", placeholders);
         }
     }
 }

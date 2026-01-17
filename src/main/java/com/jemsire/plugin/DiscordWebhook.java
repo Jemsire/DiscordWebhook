@@ -7,6 +7,7 @@ import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.util.Config;
 import com.jemsire.commands.ReloadCommand;
+import com.jemsire.config.EventConfigManager;
 import com.jemsire.config.WebhookConfig;
 import com.jemsire.events.OnPlayerChatEvent;
 import com.jemsire.events.OnPlayerDeathEvent;
@@ -19,6 +20,9 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +35,7 @@ public class DiscordWebhook extends JavaPlugin {
     }
 
     private final Config<WebhookConfig> config;
+    private final ExecutorService threadPool;
 
     public DiscordWebhook(@Nonnull JavaPluginInit init) {
         super(init);
@@ -38,6 +43,17 @@ public class DiscordWebhook extends JavaPlugin {
 
         // Registers the configuration with the filename "WebhookConfig"
         this.config = this.withConfig("WebhookConfig", WebhookConfig.CODEC);
+
+        // Initialize event config system (Service-Storage pattern)
+        EventConfigManager.initialize(this);
+        
+        // Initialize thread pool for async webhook operations
+        this.threadPool = Executors.newFixedThreadPool(2, r -> {
+            Thread thread = new Thread(r);
+            thread.setName("DiscordWebhook-Thread-" + thread.threadId());
+            thread.setDaemon(true);
+            return thread;
+        });
     }
 
     @Override
@@ -57,21 +73,52 @@ public class DiscordWebhook extends JavaPlugin {
 
         if(config.get().getUpdateCheck()){
             getLogger().at(Level.INFO).log("Checking for updates...");
-            checkForUpdates();
+            // Run update check asynchronously to avoid blocking startup
+            threadPool.execute(() -> {
+                try {
+                    checkForUpdates();
+                } catch (Exception e) {
+                    getLogger().at(Level.WARNING).log("Update check failed: " + e.getMessage());
+                }
+            });
         }
     }
 
     @Override
     protected void shutdown(){
+        getLogger().at(Level.INFO).log("Shutting down...");
+
+        // Shutdown thread pool gracefully
+        if (threadPool != null) {
+            threadPool.shutdown();
+            try {
+                if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
+                    getLogger().at(Level.WARNING).log("Thread pool did not terminate gracefully, forcing shutdown...");
+                    threadPool.shutdownNow();
+                    if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
+                        getLogger().at(Level.SEVERE).log("Thread pool did not terminate");
+                    }
+                }
+            } catch (InterruptedException e) {
+                threadPool.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+
         this.getCommandRegistry().shutdown();
         this.getEventRegistry().shutdown();
-
-        getLogger().at(Level.INFO).log("Shutting down...");
 
         config.save();
         getLogger().at(Level.INFO).log("Config Saved.");
 
         getLogger().at(Level.INFO).log("Shutdown Complete");
+    }
+    
+    /**
+     * Gets the thread pool for async operations
+     */
+    public ExecutorService getThreadPool() {
+        return threadPool;
     }
 
     private void registerCommands() {
@@ -89,6 +136,14 @@ public class DiscordWebhook extends JavaPlugin {
 
     public Config<WebhookConfig> getWebhookConfig() {
         return this.config;
+    }
+
+    /**
+     * Creates an event config using the protected withConfig method
+     * This allows EventConfigManager to create configs without direct access to withConfig
+     */
+    public com.hypixel.hytale.server.core.util.Config<com.jemsire.config.EventConfig> createEventConfig(String configName, com.hypixel.hytale.codec.builder.BuilderCodec<com.jemsire.config.EventConfig> codec) {
+        return this.withConfig(configName, codec);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.jemsire.commands;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
+import com.jemsire.config.EventConfigManager;
 import com.jemsire.plugin.DiscordWebhook;
 
 import javax.annotation.Nonnull;
@@ -23,11 +24,14 @@ public class ReloadCommand extends CommandBase {
             }
         }
 
-        if(DiscordWebhook.get().getWebhookConfig().get().reloadConfig()){
+        boolean mainConfigChanged = DiscordWebhook.get().getWebhookConfig().get().reloadConfig();
+        EventConfigManager.reloadAllEventConfigs();
+
+        if(mainConfigChanged){
             context.sendMessage(Message.raw("Config reloaded with new values!").color(Color.GREEN));
             return;
         }
 
-        context.sendMessage(Message.raw("Config has no changes. Config was not reloaded.").color(Color.RED));
+        context.sendMessage(Message.raw("Configs reloaded.").color(Color.GREEN));
     }
 }

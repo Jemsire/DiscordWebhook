@@ -9,30 +9,38 @@
 A Hytale server plugin that links in-game events to a Discord channel using a webhook. This plugin automatically sends player join, leave, deaths, and chat messages to your Discord server.
 ## Current Features
 
-- **Player Join Events**: Sends an embed notification when a player joins the server
-- **Player Leave Events**: Sends an embed notification when a player leaves the server
-- **Player Death Events**: Sends an embed notification when a player dies on the server
-- **Player Chat**: Forwards all player chat messages to Discord
-- **Easy Configuration**: Simple webhook URL configuration
-- **Update check**: Check Github releases for updates and notifies you if there is one
+- **Event Configuration System**: Individual configuration files for each event type
+- **Placeholder System**: Dynamic placeholders like `{player}`, `{message}`, `{deathCause}`, etc.
+- **Multiple Webhook Channels**: Route different events to different Discord channels
+- **Message Customization**: Full control over message format (embeds, plain text, or both)
+- **Event Toggling**: Enable or disable individual events
+- **Update Check**: Check Github releases for updates and notifies you if there is one
 - **Hot Reload**: Reload configuration without restarting the server using `/dw-reload`
 
-## Planned Features
-- **Most other events from the game**: Dont currently have all events but want to add most the main ones like deaths.
-- **Toggling events**: Add toggles for events
-- **Message customization**: Want to add customization for type of message(embed/raw) and its contents.
+## Current Events
+
+- **Player Join Events**: Sends customizable notifications when a player joins the server
+- **Player Leave Events**: Sends customizable notifications when a player leaves the server
+- **Player Death Events**: Sends customizable notifications when a player dies on the server
+- **Player Chat**: Forwards all player chat messages to Discord with full customization
 
 ## Installation
 
 1. Download the latest release from the [releases page](https://github.com/jemsire/DiscordWebhook/releases)
 2. Place the `DiscordWebhook-x.x.x.jar` file into your Hytale server's `mods` folder
-3. Start your server to generate the configuration file
-4. Edit the `Jemsire_DiscordWebhook/WebhookConfig.json` file in your mods folder and add your Discord webhook URL
-5. In-game type `/dw-reload` to hot reload the config to start the plugin.
+3. Start your server to generate the configuration files
+4. Edit the `Jemsire_DiscordWebhook/WebhookConfig.json` file and add your Discord webhook URL(s)
+5. (Optional) Customize individual event configs in `Jemsire_DiscordWebhook/events/` folder
+6. In-game type `/dw-reload` to hot reload the config to start the plugin
+
+**Note:** Default event configurations are automatically created on first launch. You can customize them or leave them as-is.
 
 ## Configuration
 
-After first launch, a `Jemsire_DiscordWebhook/WebhookConfig.json` file will be created in your mods folder. Edit this file and replace `PUT-WEBHOOK-URL-HERE` with your Discord webhook URL.
+After first launch, configuration files will be created in your mods folder. The plugin uses a two-tier configuration system:
+
+1. **WebhookConfig.json**: Main configuration with webhook URLs and channels
+2. **events/**: Individual event configuration files
 
 ### Getting a Discord Webhook URL
 
@@ -42,20 +50,103 @@ After first launch, a `Jemsire_DiscordWebhook/WebhookConfig.json` file will be c
 4. Copy the webhook URL
 5. Paste it into your `WebhookConfig.json` file
 
-### Configuration File Structure
+### Main Configuration File (WebhookConfig.json)
+
+The main configuration file is located at `Jemsire_DiscordWebhook/WebhookConfig.json`:
 
 ```json
 {
   "WebhookLink": "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_HERE",
-  "Version": 1,
-  "UpdateCheck": true
+  "Version": 2,
+  "UpdateCheck": true,
+  "WebhookChannels": {
+    "default": "https://discord.com/api/webhooks/YOUR_DEFAULT_WEBHOOK_URL",
+    "staff": "https://discord.com/api/webhooks/YOUR_STAFF_WEBHOOK_URL"
+  }
 }
 ```
 
+**Configuration Options:**
+- `WebhookLink`: Default webhook URL (used as fallback)
+- `Version`: Configuration version (currently 2)
+- `UpdateCheck`: Enable/disable automatic update checking
+- `WebhookChannels`: Map of channel names to webhook URLs (e.g., "default", "staff", "admin")
+
+### Event Configuration Files
+
+Each event has its own configuration file in `Jemsire_DiscordWebhook/events/`. Default configs are automatically created on first launch:
+
+- `PlayerChat.json` - Player chat messages
+- `PlayerReady.json` - Player join events
+- `PlayerDisconnect.json` - Player leave events
+- `PlayerDeath.json` - Player death events
+
+#### Event Configuration Structure
+
+```json
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"content\": \"💬 **{player}**: {message}\"}"
+}
+```
+
+**Configuration Options:**
+- `Enabled`: Enable or disable this event (true/false)
+- `WebhookChannel`: Which webhook channel to use (must match a key in `WebhookChannels` from main config)
+- `MessageJson`: Raw Discord webhook JSON with placeholders (see below)
+
+#### Message Format Examples
+
+**Plain Text Message:**
+```json
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"content\": \"💬 **{player}**: {message}\"}"
+}
+```
+
+**Embed Message:**
+```json
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"embeds\": [{\"title\": \"📥 Player Joined\", \"description\": \"{player} has entered the world!\", \"color\": 65280}]}"
+}
+```
+
+**Combined (Text + Embed):**
+```json
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"content\": \"New player!\", \"embeds\": [{\"title\": \"Player Joined\", \"description\": \"{player} joined the server\", \"color\": 65280}]}"
+}
+```
+
+#### Available Placeholders
+
+Placeholders are replaced at runtime with actual values. Use `{placeholderName}` in your JSON strings.
+
+- `{player}` - Player's username
+- `{playerUsername}` - Player's username (alias)
+- `{message}` - Chat message content
+- `{content}` - Chat message content (alias)
+- `{playerUuid}` - Player's UUID (if available)
+- `{deathCause}` - Formatted death message
+- `{deathMessage}` - Formatted death message (alias)
+- `{deathMessageRaw}` - Raw death message (if available)
+
+**Note:** Some Placeholders wont work in some events. Placeholders are automatically escaped for JSON, so special characters won't break your webhook payload.
+
 ## Screenshots
 
-### Configuration File
-![Configuration File](assets/images/ConfigFile.png)
+### Main Configuration File
+![Main Configuration File](assets/images/ConfigFile.png)
+
+### Event Configuration Files
+![Event Configuration Files](assets/images/EventFile.png)
 
 ### Discord Messages
 ![Discord Messages](assets/images/DiscordExample.png)
@@ -72,34 +163,47 @@ After first launch, a `Jemsire_DiscordWebhook/WebhookConfig.json` file will be c
 
 The plugin follows a modular architecture:
 
-- **Main Plugin Class** (`DiscordWebhook.java`): Handles plugin initialization, event registration, and configuration management
-- **Event Handlers**: Listen for Hytale server events and format messages for Discord
-- **Webhook Sender** (`DiscordWebhookSender.java`): Handles HTTP requests to Discord's webhook API
-- **Configuration System**: Manages webhook URL storage and reloading
+- **Main Plugin Class** (`DiscordWebhook.java`): Handles plugin initialization, event registration, configuration management, and thread pool for async operations
+- **Event Handlers**: Listen for Hytale server events and collect placeholder data
+- **Event Configuration System** (`EventConfigManager.java`): Manages individual event configs with enable/disable, webhook channels, and custom messages
+- **Placeholder Replacer** (`PlaceholderReplacer.java`): Replaces placeholders in JSON templates with actual values
+- **Webhook Sender** (`DiscordWebhookSender.java`): Handles asynchronous HTTP requests to Discord's webhook API via thread pool
+- **Configuration System**: Manages webhook URL storage, channels, and reloading
 
 ### Event Flow
 
+1. **Event Occurs**: A Hytale server event is triggered (e.g., player joins, chats, dies)
+2. **Event Handler**: The corresponding event handler collects relevant data (player name, message, etc.)
+3. **Placeholder Map**: Event data is converted into a placeholder map (e.g., `{"player": "Steve", "message": "Hello!"}`)
+4. **Config Lookup**: The system looks up the event's configuration file (e.g., `PlayerChat.json`)
+5. **Placeholder Replacement**: Placeholders in the `MessageJson` are replaced with actual values
+6. **Webhook Channel Resolution**: The configured webhook channel is resolved to a webhook URL
+7. **Async Send**: The final JSON is sent to Discord asynchronously via a background thread (non-blocking)
+
+### Event Handlers
+
 1. **Player Join** (`OnPlayerReadyEvent.java`):
    - Listens for `PlayerReadyEvent`
-   - Sends a green embed with player name and join message
+   - Provides placeholders: `{player}`, `{playerDisplayName}`, `{playerUsername}`, `{playerUuid}`
 
 2. **Player Leave** (`OnPlayerDisconnectEvent.java`):
    - Listens for `PlayerDisconnectEvent`
-   - Sends a red embed with player name and leave message
+   - Provides placeholders: `{player}`, `{playerUsername}`, `{playerUuid}`
 
 3. **Player Death** (`OnPlayerDeathEvent.java`):
-    - Listens for `DeathSystems.OnDeathSystem` events
-    - Sends a gray embed with player name and death message
+   - Listens for `DeathSystems.OnDeathSystem` events
+   - Provides placeholders: `{player}`, `{playerDisplayName}`, `{playerUsername}`, `{playerUuid}`, `{deathCause}`, `{deathMessage}`, `{deathMessageRaw}`
 
 4. **Player Chat** (`OnPlayerChatEvent.java`):
    - Listens for `PlayerChatEvent`
-   - Sends a formatted message with player name and chat content
+   - Provides placeholders: `{player}`, `{playerUsername}`, `{message}`, `{content}`, `{playerUuid}`
 
 ### Message Formatting
 
-- **Join/Leave/Death Events**: Sent as Discord embeds with colored borders (green for join, red for leave)
-- **Chat Messages**: Sent as plain text messages with player name and content
-- **JSON Escaping**: All messages are properly escaped to prevent JSON injection
+- **Customizable Format**: Each event can use plain text, embeds, or both
+- **Placeholder System**: Dynamic values are injected at runtime
+- **JSON Escaping**: All placeholder values are properly escaped to prevent JSON injection
+- **Multiple Channels**: Different events can route to different Discord channels via webhook channels
 
 ## Building from Source
 
@@ -131,24 +235,27 @@ The plugin follows a modular architecture:
 DiscordWebhook/
 ├── src/main/java/com/jemsire/
 │   ├── commands/
-│   │   └── ReloadCommand.java      # Command handler for /dw-reload
+│   │   └── ReloadCommand.java           # Command handler for /dw-reload
 │   ├── config/
-│   │   └── WebhookConfig.java      # Configuration data class
+│   │   ├── WebhookConfig.java           # Main configuration data class
+│   │   ├── EventConfig.java             # Individual event configuration data class
+│   │   └── EventConfigManager.java      # Manager for event configs (loading, saving, caching)
 │   ├── events/
-│   │   ├── OnPlayerChatEvent.java      # Handles player chat messages
+│   │   ├── OnPlayerChatEvent.java       # Handles player chat messages
 │   │   ├── OnPlayerDisconnectEvent.java # Handles player disconnections
-│   │   ├── OnPlayerDeathEvent.java     # Handles player deaths
-│   │   └── OnPlayerReadyEvent.java     # Handles player joins
+│   │   ├── OnPlayerDeathEvent.java      # Handles player deaths
+│   │   └── OnPlayerReadyEvent.java      # Handles player joins
 │   ├── plugin/
-│   │   └── DiscordWebhook.java     # Main plugin class
+│   │   └── DiscordWebhook.java          # Main plugin class
 │   └── utils/
-│       ├── DiscordWebhookSender.java   # Webhook HTTP client
-│       ├── UpdateChecker.java          # Checks for updates
-│       └── Logger.java                 # Logging utility
+│       ├── DiscordWebhookSender.java     # Webhook HTTP client
+│       ├── PlaceholderReplacer.java     # Placeholder replacement utility
+│       ├── UpdateChecker.java           # Checks for updates
+│       └── Logger.java                  # Logging utility
 ├── src/main/resources/
-│   └── manifest.json                # Plugin metadata
-├── build.gradle.kts                 # Gradle build configuration
-└── settings.gradle.kts              # Gradle project settings
+│   └── manifest.json                    # Plugin metadata
+├── build.gradle.kts                     # Gradle build configuration
+└── settings.gradle.kts                  # Gradle project settings
 ```
 
 ## Technical Details
@@ -164,25 +271,50 @@ DiscordWebhook/
 - JSON content is properly escaped to prevent injection attacks
 - Permission-based command access (`discordwebhook.reload`)
 
+### Performance
+
+- **Asynchronous Webhook Sending**: All webhook operations run in background threads to prevent blocking the game server
+- **Thread Pool**: Uses a fixed thread pool (2 threads) for concurrent webhook operations
+- **Non-Blocking**: Network requests never block the main game thread, ensuring smooth gameplay
+- **Update Checking**: Update checks run asynchronously during startup to avoid delays
+
 ### Error Handling
 
 - Validates webhook URL is set before sending messages
 - Logs errors to server console if webhook requests fail
 - Gracefully handles network errors without crashing the server
+- 5-second timeout on all HTTP connections to prevent hanging
 
 ## Troubleshooting
 
 ### Messages Not Appearing in Discord
 
-1. **Check Webhook URL**: Ensure the URL in `WebhookConfig.json` is correct
-2. **Verify Webhook Status**: Check if the webhook is still active in Discord
-3. **Check Server Logs**: Look for error messages in the server console
-4. **Reload Config**: Use `/dw-reload` after updating the configuration
+1. **Check Webhook URLs**: Ensure webhook URLs in `WebhookConfig.json` and event configs are correct
+2. **Verify Webhook Status**: Check if the webhooks are still active in Discord
+3. **Check Event Enabled Status**: Verify that `"Enabled": true` in the event's JSON file
+4. **Check Webhook Channel**: Ensure the `WebhookChannel` in event config matches a channel in `WebhookChannels`
+5. **Check Server Logs**: Look for error messages in the server console
+6. **Reload Config**: Use `/dw-reload` after updating the configuration
+7. **Validate JSON**: Ensure your `MessageJson` is valid JSON (use a JSON validator)
 
 ### Permission Errors
 
 - Ensure you have the `discordwebhook.reload` permission to use the reload command
 - Check your server's permission system configuration
+
+### Placeholders Not Replacing
+
+- Check that placeholder names match exactly (case-sensitive)
+- Ensure placeholders use the format `{placeholderName}` (with curly braces)
+- Verify that the event handler provides the placeholder you're trying to use
+- Check server logs for warnings about missing placeholders
+
+### Event Not Triggering
+
+- Verify the event config file exists in `Jemsire_DiscordWebhook/events/`
+- Check that `"Enabled": true` in the event config
+- Ensure the `MessageJson` field is not empty
+- Check server logs for event-related errors
 
 ## Contributing
 
