@@ -193,6 +193,7 @@ Placeholders are replaced at runtime with actual values. Use `{placeholderName}`
 
 ### Discord Messages
 ![Discord Messages](assets/images/DiscordExample.png)
+![Discord Messages](assets/images/DiscordExample2.png)
 
 ## Commands
 
