@@ -82,7 +82,7 @@ The main configuration file is located at `Jemsire_DiscordWebhook/WebhookConfig.
 Each event has its own configuration file in `Jemsire_DiscordWebhook/events/`. Default configs are automatically created on first launch:
 
 - `PlayerChat.json` - Player chat messages
-- `PlayerReady.json` - Player join events
+- `PlayerConnect.json` - Player connect events
 - `PlayerDisconnect.json` - Player leave events
 - `PlayerDeath.json` - Player death events
 - `Boot.json` - Server startup events
@@ -226,27 +226,22 @@ The plugin follows a modular architecture:
 
 ### Event Handlers
 
-1. **Player Join** (`OnPlayerReadyEvent.java`):
-   - Listens for `PlayerReadyEvent`
-   - Provides placeholders: `{player}`, `{playerDisplayName}`, `{playerUsername}`, `{playerUuid}`
-
+1. **Player Join** (`OnPlayerConnectEvent.java`):
+    - Listens for `PlayerConnectEvent`
+    - Provides placeholders: `{player}`, `{playerDisplayName}`, `{playerUsername}`, `{playerUuid}`
 2. **Player Leave** (`OnPlayerDisconnectEvent.java`):
    - Listens for `PlayerDisconnectEvent`
    - Provides placeholders: `{player}`, `{playerUsername}`, `{playerUuid}`
-
 3. **Player Death** (`OnPlayerDeathEvent.java`):
    - Listens for `DeathSystems.OnDeathSystem` events
    - Provides placeholders: `{player}`, `{playerDisplayName}`, `{playerUsername}`, `{playerUuid}`, `{deathCause}`, `{deathMessage}`, `{deathMessageRaw}`
-
 4. **Player Chat** (`OnPlayerChatEvent.java`):
    - Listens for `PlayerChatEvent`
    - Provides placeholders: `{player}`, `{playerUsername}`, `{message}`, `{content}`, `{playerUuid}`
-
 5. **Server Boot** (`OnBootEvent.java`):
    - Listens for `BootEvent`
    - Provides placeholders: `{time}`, `{time-<timezone>}` (any valid timezone)
    - Example: `{time-america/los_angeles}` for Pacific Time
-
 6. **Server Shutdown** (`OnShutdownEvent.java`):
    - Listens for `ShutdownEvent`
    - Provides placeholders: `{time}`, `{time-<timezone>}` (any valid timezone)
@@ -298,7 +293,7 @@ DiscordWebhook/
 │   │   ├── OnPlayerChatEvent.java       # Handles player chat messages
 │   │   ├── OnPlayerDisconnectEvent.java # Handles player disconnections
 │   │   ├── OnPlayerDeathEvent.java      # Handles player deaths
-│   │   ├── OnPlayerReadyEvent.java      # Handles player joins
+│   │   ├── OnPlayerConnectEvent.java    # Handles player connections
 │   │   ├── OnBootEvent.java             # Handles server startup
 │   │   └── OnShutdownEvent.java         # Handles server shutdown
 │   ├── plugin/
@@ -311,7 +306,7 @@ DiscordWebhook/
 ├── src/main/resources/
 │   ├── events/                          # Default event configuration templates
 │   │   ├── PlayerChat.json
-│   │   ├── PlayerReady.json
+│   │   ├── PlayerConnect.json
 │   │   ├── PlayerDisconnect.json
 │   │   ├── PlayerDeath.json
 │   │   ├── Boot.json

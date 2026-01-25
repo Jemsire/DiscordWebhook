@@ -3,6 +3,7 @@ package com.jemsire.plugin;
 import com.hypixel.hytale.server.core.event.events.BootEvent;
 import com.hypixel.hytale.server.core.event.events.ShutdownEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
+import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
@@ -132,11 +133,12 @@ public class DiscordWebhook extends JavaPlugin {
     }
 
     private void registerEvents() {
-        this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, OnPlayerReadyEvent::onPlayerReady);
+        //this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, OnPlayerReadyEvent::onPlayerReady);
         this.getEventRegistry().registerGlobal(PlayerChatEvent.class, OnPlayerChatEvent::onPlayerChat);
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, OnPlayerDisconnectEvent::onPlayerDisconnect);
         this.getEventRegistry().registerGlobal(ShutdownEvent.class, OnShutdownEvent::onShutdownEvent);
         this.getEventRegistry().registerGlobal(BootEvent.class, OnBootEvent::onBootEvent);
+        this.getEventRegistry().registerGlobal(PlayerConnectEvent.class, OnPlayerConnectEvent::onPlayerConnect);
         this.getEntityStoreRegistry().registerSystem(new OnPlayerDeathEvent());
         Logger.info("Events Registered.");
     }
@@ -214,8 +216,9 @@ public class DiscordWebhook extends JavaPlugin {
             // List of default event files to copy from resources
             String[] defaultEventFiles = {
                     "PlayerChat.json",
-                    "PlayerReady.json",
+                    //"PlayerReady.json",
                     "PlayerDisconnect.json",
+                    "PlayerConnect.json",
                     "PlayerDeath.json",
                     "Shutdown.json",
                     "Boot.json"

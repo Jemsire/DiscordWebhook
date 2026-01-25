@@ -9,6 +9,9 @@ import java.util.Map;
 
 public class OnPlayerReadyEvent {
 
+    //Event gets called on world change as well.
+    //Disabled for now
+
     public static void onPlayerReady(PlayerReadyEvent event) {
         Player player = event.getPlayer();
 

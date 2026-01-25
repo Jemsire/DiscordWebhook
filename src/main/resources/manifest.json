@@ -1,7 +1,7 @@
 {
   "Group": "Jemsire",
   "Name": "DiscordWebhook",
-  "Version": "1.3.0",
+  "Version": "1.4.0",
   "Description": "Show you in-game chat and events using only a discord webhook!",
   "Authors": [
     {
