@@ -1,0 +1,5 @@
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"content\": \"💬 **{player}**: {message}\"}"
+}

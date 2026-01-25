@@ -1,0 +1,5 @@
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"embeds\": [{\"title\": \"📤 Player Left\", \"description\": \"{player} has logged out.\", \"color\": 16711680}]}"
+}

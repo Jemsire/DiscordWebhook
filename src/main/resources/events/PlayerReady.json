@@ -1,0 +1,5 @@
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"embeds\": [{\"title\": \"📥 Player Joined\", \"description\": \"{player} has entered the world!\", \"color\": 65280}]}"
+}

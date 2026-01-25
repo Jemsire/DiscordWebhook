@@ -6,16 +6,19 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/jemsire/DiscordWebhook)
 ![GitHub license](https://img.shields.io/github/license/jemsire/DiscordWebhook)
 
-A Hytale server plugin that links in-game events to a Discord channel using a webhook. This plugin automatically sends player join, leave, deaths, and chat messages to your Discord server.
+A Hytale plugin that links in-game events to a Discord channel using a webhook. This plugin automatically sends player join, leave, deaths, chat messages, and server lifecycle events to your Discord server.
+
 ## Current Features
 
 - **Event Configuration System**: Individual configuration files for each event type
-- **Placeholder System**: Dynamic placeholders like `{player}`, `{message}`, `{deathCause}`, etc.
+- **Placeholder System**: Dynamic placeholders like `{player}`, `{message}`, `{deathCause}`, `{time}`, etc.
+- **Timezone Support**: Time placeholders with timezone control (e.g., `{time-america/los_angeles}`)
 - **Multiple Webhook Channels**: Route different events to different Discord channels
 - **Message Customization**: Full control over message format (embeds, plain text, or both)
 - **Event Toggling**: Enable or disable individual events
 - **Update Check**: Check Github releases for updates and notifies you if there is one
 - **Hot Reload**: Reload configuration without restarting the server using `/dw-reload`
+- **Default Event Templates**: Default event configurations are automatically copied from resources on first launch
 
 ## Current Events
 
@@ -23,6 +26,8 @@ A Hytale server plugin that links in-game events to a Discord channel using a we
 - **Player Leave Events**: Sends customizable notifications when a player leaves the server
 - **Player Death Events**: Sends customizable notifications when a player dies on the server
 - **Player Chat**: Forwards all player chat messages to Discord with full customization
+- **Server Boot**: Sends a notification when the server starts up
+- **Server Shutdown**: Sends a notification when the server shuts down
 
 ## Installation
 
@@ -80,6 +85,8 @@ Each event has its own configuration file in `Jemsire_DiscordWebhook/events/`. D
 - `PlayerReady.json` - Player join events
 - `PlayerDisconnect.json` - Player leave events
 - `PlayerDeath.json` - Player death events
+- `Boot.json` - Server startup events
+- `Shutdown.json` - Server shutdown events
 
 #### Event Configuration Structure
 
@@ -125,20 +132,56 @@ Each event has its own configuration file in `Jemsire_DiscordWebhook/events/`. D
 }
 ```
 
+**Server Event with Timezone:**
+```json
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"embeds\": [{\"title\": \"🚀 Server Started\", \"description\": \"Server started at {time-america/los_angeles}\", \"color\": 3447003}]}"
+}
+```
+
 #### Available Placeholders
 
 Placeholders are replaced at runtime with actual values. Use `{placeholderName}` in your JSON strings.
 
-- `{player}` - Player's username
+**Player Placeholders:**
+- `{player}` - Player's username or display name (context-dependent)
 - `{playerUsername}` - Player's username (alias)
+- `{playerDisplayName}` - Player's display name (alias)
+- `{playerUuid}` - Player's UUID (if available)
+
+**Chat Placeholders:**
 - `{message}` - Chat message content
 - `{content}` - Chat message content (alias)
-- `{playerUuid}` - Player's UUID (if available)
+
+**Death Placeholders:**
 - `{deathCause}` - Formatted death message
 - `{deathMessage}` - Formatted death message (alias)
 - `{deathMessageRaw}` - Raw death message (if available)
 
-**Note:** Some Placeholders wont work in some events. Placeholders are automatically escaped for JSON, so special characters won't break your webhook payload.
+**Time Placeholders:**
+- `{time}` - Current time in server's default timezone (format: `yyyy-MM-dd HH:mm:ss z`)
+- `{time-<timezone>}` - Current time in a specific timezone (e.g., `{time-america/los_angeles}`)
+
+**Timezone Examples:**
+- `{time-america/los_angeles}` - Pacific Time (PST/PDT)
+- `{time-america/new_york}` - Eastern Time (EST/EDT)
+- `{time-america/chicago}` - Central Time (CST/CDT)
+- `{time-america/denver}` - Mountain Time (MST/MDT)
+- `{time-europe/london}` - UK Time (GMT/BST)
+- `{time-europe/paris}` - Central European Time (CET/CEST)
+- `{time-asia/tokyo}` - Japan Standard Time (JST)
+- `{time-australia/sydney}` - Australian Eastern Time (AEST/AEDT)
+- `{time-utc}` - Coordinated Universal Time (UTC)
+
+**Timezone Notes:**
+- Timezone names are case-insensitive (e.g., `AMERICA/LOS_ANGELES` works the same as `america/los_angeles`)
+- Any valid Java timezone ID can be used (see [IANA Time Zone Database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+- If an invalid timezone is specified, the system will default to UTC and log a warning to the console
+- Time format includes the timezone abbreviation (e.g., "2026-01-25 10:30:45 PST")
+
+**Note:** Some placeholders won't work in some events. Placeholders are automatically escaped for JSON, so special characters won't break your webhook payload.
 
 ## Screenshots
 
@@ -163,10 +206,10 @@ Placeholders are replaced at runtime with actual values. Use `{placeholderName}`
 
 The plugin follows a modular architecture:
 
-- **Main Plugin Class** (`DiscordWebhook.java`): Handles plugin initialization, event registration, configuration management, and thread pool for async operations
+- **Main Plugin Class** (`DiscordWebhook.java`): Handles plugin initialization, event registration, configuration management, default file copying, and thread pool for async operations
 - **Event Handlers**: Listen for Hytale server events and collect placeholder data
 - **Event Configuration System** (`EventConfigManager.java`): Manages individual event configs with enable/disable, webhook channels, and custom messages
-- **Placeholder Replacer** (`PlaceholderReplacer.java`): Replaces placeholders in JSON templates with actual values
+- **Placeholder Replacer** (`PlaceholderReplacer.java`): Replaces placeholders in JSON templates with actual values, including dynamic timezone resolution for time placeholders
 - **Webhook Sender** (`DiscordWebhookSender.java`): Handles asynchronous HTTP requests to Discord's webhook API via thread pool
 - **Configuration System**: Manages webhook URL storage, channels, and reloading
 
@@ -197,6 +240,16 @@ The plugin follows a modular architecture:
 4. **Player Chat** (`OnPlayerChatEvent.java`):
    - Listens for `PlayerChatEvent`
    - Provides placeholders: `{player}`, `{playerUsername}`, `{message}`, `{content}`, `{playerUuid}`
+
+5. **Server Boot** (`OnBootEvent.java`):
+   - Listens for `BootEvent`
+   - Provides placeholders: `{time}`, `{time-<timezone>}` (any valid timezone)
+   - Example: `{time-america/los_angeles}` for Pacific Time
+
+6. **Server Shutdown** (`OnShutdownEvent.java`):
+   - Listens for `ShutdownEvent`
+   - Provides placeholders: `{time}`, `{time-<timezone>}` (any valid timezone)
+   - Example: `{time-america/los_angeles}` for Pacific Time
 
 ### Message Formatting
 
@@ -244,15 +297,24 @@ DiscordWebhook/
 │   │   ├── OnPlayerChatEvent.java       # Handles player chat messages
 │   │   ├── OnPlayerDisconnectEvent.java # Handles player disconnections
 │   │   ├── OnPlayerDeathEvent.java      # Handles player deaths
-│   │   └── OnPlayerReadyEvent.java      # Handles player joins
+│   │   ├── OnPlayerReadyEvent.java      # Handles player joins
+│   │   ├── OnBootEvent.java             # Handles server startup
+│   │   └── OnShutdownEvent.java         # Handles server shutdown
 │   ├── plugin/
 │   │   └── DiscordWebhook.java          # Main plugin class
 │   └── utils/
 │       ├── DiscordWebhookSender.java     # Webhook HTTP client
-│       ├── PlaceholderReplacer.java     # Placeholder replacement utility
+│       ├── PlaceholderReplacer.java     # Placeholder replacement utility (includes timezone support)
 │       ├── UpdateChecker.java           # Checks for updates
 │       └── Logger.java                  # Logging utility
 ├── src/main/resources/
+│   ├── events/                          # Default event configuration templates
+│   │   ├── PlayerChat.json
+│   │   ├── PlayerReady.json
+│   │   ├── PlayerDisconnect.json
+│   │   ├── PlayerDeath.json
+│   │   ├── Boot.json
+│   │   └── Shutdown.json
 │   └── manifest.json                    # Plugin metadata
 ├── build.gradle.kts                     # Gradle build configuration
 └── settings.gradle.kts                  # Gradle project settings
@@ -304,10 +366,12 @@ DiscordWebhook/
 
 ### Placeholders Not Replacing
 
-- Check that placeholder names match exactly (case-sensitive)
+- Check that placeholder names match exactly (case-sensitive for non-timezone placeholders)
 - Ensure placeholders use the format `{placeholderName}` (with curly braces)
 - Verify that the event handler provides the placeholder you're trying to use
 - Check server logs for warnings about missing placeholders
+- For timezone placeholders: Ensure the timezone ID is valid (check server logs for warnings about invalid timezones)
+- Timezone placeholders are case-insensitive, but must use the format `{time-<timezone>}` (e.g., `{time-america/los_angeles}`)
 
 ### Event Not Triggering
 

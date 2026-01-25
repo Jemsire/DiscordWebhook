@@ -1,5 +1,7 @@
 package com.jemsire.plugin;
 
+import com.hypixel.hytale.server.core.event.events.BootEvent;
+import com.hypixel.hytale.server.core.event.events.ShutdownEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
@@ -9,18 +11,18 @@ import com.hypixel.hytale.server.core.util.Config;
 import com.jemsire.commands.ReloadCommand;
 import com.jemsire.config.EventConfigManager;
 import com.jemsire.config.WebhookConfig;
-import com.jemsire.events.OnPlayerChatEvent;
-import com.jemsire.events.OnPlayerDeathEvent;
-import com.jemsire.events.OnPlayerDisconnectEvent;
-import com.jemsire.events.OnPlayerReadyEvent;
+import com.jemsire.events.*;
 import com.jemsire.utils.Logger;
 import com.jemsire.utils.UpdateChecker;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,9 @@ public class DiscordWebhook extends JavaPlugin {
 
         // Registers the configuration with the filename "WebhookConfig"
         this.config = this.withConfig("WebhookConfig", WebhookConfig.CODEC);
+
+        // Copy default event files from resources if they don't exist
+        copyDefaultEventFiles();
 
         // Initialize event config system (Service-Storage pattern)
         EventConfigManager.initialize(this);
@@ -130,6 +135,8 @@ public class DiscordWebhook extends JavaPlugin {
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, OnPlayerReadyEvent::onPlayerReady);
         this.getEventRegistry().registerGlobal(PlayerChatEvent.class, OnPlayerChatEvent::onPlayerChat);
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, OnPlayerDisconnectEvent::onPlayerDisconnect);
+        this.getEventRegistry().registerGlobal(ShutdownEvent.class, OnShutdownEvent::onShutdownEvent);
+        this.getEventRegistry().registerGlobal(BootEvent.class, OnBootEvent::onBootEvent);
         this.getEntityStoreRegistry().registerSystem(new OnPlayerDeathEvent());
         Logger.info("Events Registered.");
     }
@@ -188,5 +195,71 @@ public class DiscordWebhook extends JavaPlugin {
         String currentVersion = getVersionFromManifest();
         UpdateChecker updateChecker = new UpdateChecker(currentVersion);
         updateChecker.checkForUpdates();
+    }
+
+    /**
+     * Copies default event files from resources/events/ to the server's events directory
+     * Only copies files that don't already exist in the server directory
+     */
+    private void copyDefaultEventFiles() {
+        try {
+            File pluginDataDir = this.getDataDirectory().toFile();
+            File eventsDir = new File(pluginDataDir, "events");
+
+            // Create events directory if it doesn't exist
+            if (!eventsDir.exists()) {
+                eventsDir.mkdirs();
+            }
+
+            // List of default event files to copy from resources
+            String[] defaultEventFiles = {
+                    "PlayerChat.json",
+                    "PlayerReady.json",
+                    "PlayerDisconnect.json",
+                    "PlayerDeath.json",
+                    "Shutdown.json",
+                    "Boot.json"
+            };
+
+            // Copy each default file if it doesn't exist
+            for (String fileName : defaultEventFiles) {
+                copyDefaultEventFile(eventsDir, fileName);
+            }
+        } catch (Exception e) {
+            Logger.warning("Failed to copy default event files: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Copies a default event file from resources to the events directory if it doesn't exist
+     * @param eventsDir The events directory in the server's plugin data folder
+     * @param fileName The name of the file to copy (e.g., "PlayerChat.json")
+     */
+    private void copyDefaultEventFile(File eventsDir, String fileName) {
+        File targetFile = new File(eventsDir, fileName);
+
+        // Skip if file already exists
+        if (targetFile.exists()) {
+            return;
+        }
+
+        try {
+            // Read from resources
+            String resourcePath = "events/" + fileName;
+            InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
+
+            if (resourceStream == null) {
+                Logger.warning("Default event file not found in resources: " + resourcePath);
+                return;
+            }
+
+            // Copy to target location
+            Files.copy(resourceStream, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            resourceStream.close();
+
+            Logger.info("Created default event file: " + targetFile.getAbsolutePath());
+        } catch (Exception e) {
+            Logger.warning("Failed to copy default event file " + fileName + ": " + e.getMessage());
+        }
     }
 }

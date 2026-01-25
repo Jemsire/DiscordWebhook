@@ -1,0 +1,5 @@
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"embeds\": [{\"title\": \"🔌 Server Shutdown\", \"description\": \"Server shutdown at {time-america/los_angeles}\", \"color\": 16753920}]}"
+}

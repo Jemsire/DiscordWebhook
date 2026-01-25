@@ -1,0 +1,5 @@
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"embeds\": [{\"title\": \"☠ Player Died\", \"description\": \"{player} {deathCause}\", \"color\": 12434877}]}"
+}

@@ -1,0 +1,5 @@
+{
+  "Enabled": true,
+  "WebhookChannel": "default",
+  "MessageJson": "{\"embeds\": [{\"title\": \"🚀 Server Started\", \"description\": \"Server started at {time-america/los_angeles}\", \"color\": 3447003}]}"
+}
