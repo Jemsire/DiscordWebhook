@@ -1,15 +1,17 @@
 package com.jemsire.plugin;
 
+import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.common.semver.Semver;
 import com.hypixel.hytale.server.core.event.events.BootEvent;
 import com.hypixel.hytale.server.core.event.events.ShutdownEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
-import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.util.Config;
 import com.jemsire.commands.ReloadCommand;
+import com.jemsire.config.EventConfig;
 import com.jemsire.config.EventConfigManager;
 import com.jemsire.config.WebhookConfig;
 import com.jemsire.events.*;
@@ -17,21 +19,18 @@ import com.jemsire.utils.Logger;
 import com.jemsire.utils.UpdateChecker;
 
 import javax.annotation.Nonnull;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DiscordWebhook extends JavaPlugin {
     private static DiscordWebhook instance;
+
+    private final Semver version;
 
     public static DiscordWebhook get() {
         return instance;
@@ -43,6 +42,8 @@ public class DiscordWebhook extends JavaPlugin {
     public DiscordWebhook(@Nonnull JavaPluginInit init) {
         super(init);
         Logger.info("Starting Plugin...");
+
+        version = init.getPluginManifest().getVersion();
 
         // Registers the configuration with the filename "WebhookConfig"
         this.config = this.withConfig("WebhookConfig", WebhookConfig.CODEC);
@@ -76,18 +77,20 @@ public class DiscordWebhook extends JavaPlugin {
 
         config.save();
         Logger.info("Config Saved.");
+    }
+
+    @Override
+    protected void start() {
+//        if (isJemPlaceholdersEnabled()) {
+//            JemPlaceholdersAPI.registerExpansion(new JemAnnouncementsExpansion());
+//        }
 
         if(config.get().getUpdateCheck()){
-            Logger.info("Checking for updates...");
-            // Run update check asynchronously to avoid blocking startup
-            threadPool.execute(() -> {
-                try {
-                    checkForUpdates();
-                } catch (Exception e) {
-                    Logger.warning("Update check failed: " + e.getMessage());
-                }
-            });
+            new UpdateChecker(version.toString()).checkForUpdatesAsync();
         }
+
+        Logger.info("[JemAnnouncements] Started!");
+        Logger.info("[JemAnnouncements] Use /jemp help for commands");
     }
 
     @Override
@@ -113,6 +116,11 @@ public class DiscordWebhook extends JavaPlugin {
 
         this.getCommandRegistry().shutdown();
         this.getEventRegistry().shutdown();
+
+        // Shutdown updater
+        if(config.get().getUpdateCheck()){
+            UpdateChecker.shutdown();
+        }
 
         config.save();
         Logger.info("Config Saved.");
@@ -151,52 +159,8 @@ public class DiscordWebhook extends JavaPlugin {
      * Creates an event config using the protected withConfig method
      * This allows EventConfigManager to create configs without direct access to withConfig
      */
-    public com.hypixel.hytale.server.core.util.Config<com.jemsire.config.EventConfig> createEventConfig(String configName, com.hypixel.hytale.codec.builder.BuilderCodec<com.jemsire.config.EventConfig> codec) {
+    public Config<EventConfig> createEventConfig(String configName, BuilderCodec<EventConfig> codec) {
         return this.withConfig(configName, codec);
-    }
-
-    /**
-     * Reads the version from manifest.json
-     */
-    private String getVersionFromManifest() {
-        try {
-            InputStream manifestStream = getClass().getClassLoader()
-                    .getResourceAsStream("manifest.json");
-            
-            if (manifestStream == null) {
-                return "1.0.0"; // fallback version
-            }
-            
-            StringBuilder content = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(manifestStream, StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    content.append(line);
-                }
-            }
-            
-            // Extract version using regex
-            Pattern pattern = Pattern.compile("\"Version\"\\s*:\\s*\"([^\"]+)\"");
-            Matcher matcher = pattern.matcher(content.toString());
-            
-            if (matcher.find()) {
-                return matcher.group(1);
-            }
-        } catch (Exception e) {
-            Logger.warning("Failed to read version from manifest: " + e.getMessage());
-        }
-        
-        return "1.0.0"; // fallback version
-    }
-
-    /**
-     * Checks for plugin updates
-     */
-    private void checkForUpdates() {
-        String currentVersion = getVersionFromManifest();
-        UpdateChecker updateChecker = new UpdateChecker(currentVersion);
-        updateChecker.checkForUpdates();
     }
 
     /**

@@ -9,6 +9,7 @@ import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathSystems;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.jemsire.utils.DiscordWebhookSender;
+import com.jemsire.utils.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -20,27 +21,31 @@ public class OnPlayerDeathEvent extends DeathSystems.OnDeathSystem {
     }
 
     public void onComponentAdded(@Nonnull Ref ref, @Nonnull DeathComponent component, @Nonnull Store store, @Nonnull CommandBuffer commandBuffer) {
-        Player playerComponent = (Player)store.getComponent(ref, Player.getComponentType());
-        DeathComponent deathComponent = (DeathComponent)store.getComponent(ref, DeathComponent.getComponentType());
-        if (playerComponent != null && deathComponent != null) {
-            String playerName = playerComponent.getDisplayName();
-            String deathCause = deathComponent.getDeathMessage().getAnsiMessage().replace("You were", "was");
+        try {
+            Player playerComponent = (Player)store.getComponent(ref, Player.getComponentType());
+            DeathComponent deathComponent = (DeathComponent)store.getComponent(ref, DeathComponent.getComponentType());
+            if (playerComponent != null && deathComponent != null) {
+                String playerName = playerComponent.getDisplayName();
+                String deathCause = deathComponent.getDeathMessage().getAnsiMessage().replace("You were", "was");
 
-            Map<String, String> placeholders = new HashMap<>();
-            placeholders.put("player", playerName);
-            placeholders.put("playerDisplayName", playerName); // Alias for clarity
-            placeholders.put("deathCause", deathCause);
-            placeholders.put("deathMessage", deathCause); // Alias for clarity
-            
-            // Try to get raw death message (without replacement)
-            try {
-                String rawDeathMessage = deathComponent.getDeathMessage().getAnsiMessage();
-                placeholders.put("deathMessageRaw", rawDeathMessage);
-            } catch (Exception e) {
-                // Raw message not available
+                Map<String, String> placeholders = new HashMap<>();
+                placeholders.put("player", playerName);
+                placeholders.put("playerDisplayName", playerName); // Alias for clarity
+                placeholders.put("deathCause", deathCause);
+                placeholders.put("deathMessage", deathCause); // Alias for clarity
+
+                // Try to get raw death message (without replacement)
+                try {
+                    String rawDeathMessage = deathComponent.getDeathMessage().getAnsiMessage();
+                    placeholders.put("deathMessageRaw", rawDeathMessage);
+                } catch (Exception e) {
+                    Logger.severe("Raw message not available", e);
+                }
+
+                DiscordWebhookSender.sendEventMessage("PlayerDeath", placeholders);
             }
-
-            DiscordWebhookSender.sendEventMessage("PlayerDeath", placeholders);
+        } catch (Exception e){
+            Logger.severe("Error in onPlayerDeathEvent", e);
         }
     }
 }

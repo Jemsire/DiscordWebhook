@@ -7,6 +7,7 @@ import com.jemsire.plugin.DiscordWebhook;
 import com.hypixel.hytale.server.core.util.Config;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -81,19 +82,20 @@ public class DiscordWebhookSender {
      */
     private static void sendRawSync(String json, String webhookUrl) {
         try {
-            if (webhookUrl == null || webhookUrl.isEmpty() || 
-                webhookUrl.equalsIgnoreCase("PUT-WEBHOOK-URL-HERE")) {
+            if (webhookUrl == null || webhookUrl.isEmpty() ||
+                    webhookUrl.equalsIgnoreCase("PUT-WEBHOOK-URL-HERE")) {
                 Logger.severe("DISCORDWEBHOOK URL NOT SET!");
                 return;
             }
 
-            URL url = new URL(webhookUrl);
+            URL url = URI.create(webhookUrl).toURL();
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");
-            connection.setConnectTimeout(5000); // 5 second timeout
-            connection.setReadTimeout(5000); // 5 second timeout
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
 
             try (OutputStream os = connection.getOutputStream()) {
                 os.write(json.getBytes(StandardCharsets.UTF_8));
@@ -101,11 +103,12 @@ public class DiscordWebhookSender {
 
             int responseCode = connection.getResponseCode();
             if (responseCode >= 200 && responseCode < 300) {
-                // Success - read response to close connection
                 connection.getInputStream().close();
             } else {
                 Logger.log("Webhook returned error code: " + responseCode, Level.WARNING);
-                connection.getErrorStream().close();
+                if (connection.getErrorStream() != null) {
+                    connection.getErrorStream().close();
+                }
             }
         } catch (Exception e) {
             Logger.severe("Failed to send webhook", e);
