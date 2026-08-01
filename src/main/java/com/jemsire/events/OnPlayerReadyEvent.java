@@ -1,7 +1,10 @@
 package com.jemsire.events;
 
-import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.jemsire.utils.DiscordWebhookSender;
 
 import java.util.HashMap;
@@ -9,15 +12,17 @@ import java.util.Map;
 
 public class OnPlayerReadyEvent {
 
-    //Event gets called on world change as well.
-    //Disabled for now
-
     public static void onPlayerReady(PlayerReadyEvent event) {
-        Player player = event.getPlayer();
+        Ref<EntityStore> entityRef = event.getPlayerRef();
+        Store<EntityStore> store = entityRef.getStore();
+        PlayerRef playerRef = store.getComponent(entityRef, PlayerRef.getComponentType());
+        if (playerRef == null) return;
+
+        String username = playerRef.getUsername();
 
         Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("player", player.getDisplayName());
-        placeholders.put("playerDisplayName", player.getDisplayName()); // Alias for clarity
+        placeholders.put("player", username);
+        placeholders.put("playerDisplayName", username);
 
         DiscordWebhookSender.sendEventMessage("PlayerReady", placeholders);
     }

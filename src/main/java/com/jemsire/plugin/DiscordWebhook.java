@@ -180,7 +180,7 @@ public class DiscordWebhook extends JavaPlugin {
             // List of default event files to copy from resources
             String[] defaultEventFiles = {
                     "PlayerChat.json",
-                    //"PlayerReady.json",
+                    "PlayerReady.json",
                     "PlayerDisconnect.json",
                     "PlayerConnect.json",
                     "PlayerDeath.json",

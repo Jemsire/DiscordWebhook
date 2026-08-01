@@ -42,9 +42,6 @@ public class EventConfigManager {
             Logger.severe("Failed to create events directory", e);
         }
         
-        // Create default configs if they don't exist
-        createDefaultConfigs();
-        
         // Load all configs
         loadAllEventConfigs();
         
@@ -152,50 +149,4 @@ public class EventConfigManager {
         }
     }
 
-    /**
-     * Creates default event configs if they don't exist
-     */
-    private static void createDefaultConfigs() {
-        Map<String, String> defaultConfigs = new HashMap<>();
-        
-        // PlayerChat event - Example of plain text message
-        defaultConfigs.put("PlayerChat", "{\n" +
-                "  \"Enabled\": true,\n" +
-                "  \"WebhookChannel\": \"default\",\n" +
-                "  \"MessageJson\": \"{\\\"content\\\": \\\"💬 **{player}**: {message}\\\"}\"\n" +
-                "}");
-
-        // PlayerReady event - Example of embed message
-        defaultConfigs.put("PlayerReady", "{\n" +
-                "  \"Enabled\": true,\n" +
-                "  \"WebhookChannel\": \"default\",\n" +
-                "  \"MessageJson\": \"{\\\"embeds\\\": [{\\\"title\\\": \\\"📥 Player Joined\\\", \\\"description\\\": \\\"{player} has entered the world!\\\", \\\"color\\\": 65280}]}\"\n" +
-                "}");
-
-        // PlayerDisconnect event - Example of embed message
-        defaultConfigs.put("PlayerDisconnect", "{\n" +
-                "  \"Enabled\": true,\n" +
-                "  \"WebhookChannel\": \"default\",\n" +
-                "  \"MessageJson\": \"{\\\"embeds\\\": [{\\\"title\\\": \\\"📤 Player Left\\\", \\\"description\\\": \\\"{player} has logged out.\\\", \\\"color\\\": 16711680}]}\"\n" +
-                "}");
-
-        // PlayerDeath event - Example of embed message
-        defaultConfigs.put("PlayerDeath", "{\n" +
-                "  \"Enabled\": true,\n" +
-                "  \"WebhookChannel\": \"default\",\n" +
-                "  \"MessageJson\": \"{\\\"embeds\\\": [{\\\"title\\\": \\\"☠ Player Died\\\", \\\"description\\\": \\\"{player} {deathCause}\\\", \\\"color\\\": 12434877}]}\"\n" +
-                "}");
-
-        for (Map.Entry<String, String> entry : defaultConfigs.entrySet()) {
-            Path configPath = eventsDir.resolve(entry.getKey() + ".json");
-            if (!Files.exists(configPath)) {
-                try {
-                    Files.write(configPath, entry.getValue().getBytes());
-                    Logger.info("Created default event config: " + entry.getKey());
-                } catch (Exception e) {
-                    Logger.severe("Failed to create default config for " + entry.getKey(), e);
-                }
-            }
-        }
     }
-}

@@ -1,5 +1,5 @@
 # Ignore HytaleServer.jar but keep libs folder structure
-libs/HytaleServer.jar
+libs/*
 
 .gradle
 build/
@@ -8,10 +8,7 @@ build/
 !**/src/test/**/build/
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -40,6 +37,9 @@ bin/
 
 ### VS Code ###
 .vscode/
+
+### Hytale Dev Server ###
+server/
 
 ### Mac OS ###
 .DS_Store

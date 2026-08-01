@@ -4,29 +4,43 @@ plugins {
 
 group = "com.jemsire"
 
-// Read version from manifest.json
 val manifestFile = file("src/main/resources/manifest.json")
 val version: String by lazy {
     if (manifestFile.exists()) {
         val manifestContent = manifestFile.readText()
-        // Simple regex to extract version from JSON
         val versionRegex = """"Version"\s*:\s*"([^"]+)"""".toRegex()
         versionRegex.find(manifestContent)?.groupValues?.get(1) ?: "1.0.0"
     } else {
-        "1.0.0" // fallback version
+        "1.0.0"
     }
 }
 project.version = version
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+}
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+    sourceCompatibility = "25"
+    targetCompatibility = "25"
+}
 
 repositories {
     mavenCentral()
     maven {
         name = "hytale"
-        url = uri("https://maven.hytale.com/release") // Or "hytale-pre-release" for pre-release versions
+        url = uri("https://maven.hytale.com/release")
     }
 }
 
 dependencies {
     implementation("com.hypixel.hytale:Server:+")
-    //compileOnly(files("libs/JemPlaceholders-1.0.0.jar"))
+    compileOnly(files("libs/JemPlaceholders-1.0.0.jar"))
+}
+
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
